@@ -59,6 +59,24 @@ defmodule TodoList do
   def delete_entry(todo_list, entry_id) do
     Map.delete(todo_list, entry_id) 
   end
+
+  defimpl String.Chars, for: TodoList do
+    def to_string(_) do
+      "#TodoList"
+    end
+  end
+
+  defimpl Collectable, for: TodoList do
+    def into(original) do
+      {original, &into_callback/2}
+    end
+
+    defp into_callback(todo_list, {:cont, entry}) do
+      TodoList.add_entry(todo_list, entry)
+    end
+    defp into_callback(todo_list, :done), do: todo_list
+    defp into_callback(todo_list, :halt), do: :ok
+  end
 end
 
 defmodule TodoList.CsvImporter do
@@ -69,7 +87,7 @@ defmodule TodoList.CsvImporter do
     |> Stream.map(&String.split(&1, ","))
     |> Stream.map(&parse_date/1)
     |> Stream.map(&create_map/1)
-    |> Enum.reduce(%TodoList{}, &TodoList.add_entry(&2, &1))
+    |> Enum.into(TodoList.new())
   end
 
   defp parse_date([date|tail]) do
