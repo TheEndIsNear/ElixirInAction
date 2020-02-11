@@ -60,3 +60,29 @@ defmodule TodoList do
     Map.delete(todo_list, entry_id) 
   end
 end
+
+defmodule TodoList.CsvImporter do
+
+  def import(filename) do
+    File.stream!(filename)
+    |> Stream.map(&String.replace(&1, "\n", ""))
+    |> Stream.map(&String.split(&1, ","))
+    |> Stream.map(&parse_date/1)
+    |> Stream.map(&create_map/1)
+    |> Enum.reduce(%TodoList{}, &TodoList.add_entry(&2, &1))
+  end
+
+  defp parse_date([date|tail]) do
+    [year, month, day] =
+    date
+    |> String.split("/") 
+    |> Enum.map(&String.to_integer/1)
+
+    {:ok, date} = Date.new(year, month, day)
+    [ date | tail]
+  end
+
+  defp create_map([date | [task]]) do
+    %{date: date, title: task}
+  end
+end
