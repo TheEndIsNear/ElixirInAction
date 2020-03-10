@@ -1,55 +1,49 @@
 defmodule Todo.Server do
+  use GenServer
+  
   def start do
-    pid = spawn(fn -> loop(Todo.List.new()) end)
-    Process.register(pid, :todo_server)
+    GenServer.start(__MODULE__, nil)
   end
 
-  def add_entry(new_entry) do
-    send(:todo_server, {:add_entry, new_entry})
+
+  def add_entry(pid, new_entry) do
+    GenServer.cast(pid, {:add_entry, new_entry})
   end
 
-  def update_entry(entry, update_func) do
-    send(:todo_server, {:update_entry, entry, update_func})
+  def update_entry(pid, entry, update_func) do
+    GenServer.cast(pid, {:update_entry, entry, update_func})
   end
 
-  def delete_entry(entry_id) do
-    send(:todo_server, {:delete_entry, entry_id})
+  def delete_entry(pid, entry_id) do
+    GenServer.cast(pid, {:delete_entry, entry_id})
   end
   
-  def entries(date) do
-    send(:todo_server, {:entries, self(), date})
-
-    receive do
-      {:todo_entries, entries} -> entries
-    after
-      5000 -> {:error, :timeout}
-    end
+  def entries(pid, date) do
+    GenServer.call(pid, {:entries, date})
   end
 
-  defp loop(todo_list) do
-    new_todo_list =
-      receive do
-        message ->
-           process_message(todo_list, message)
-      end
-
-    loop(new_todo_list)
+  @impl true
+  def init(_) do
+    {:ok, Todo.List.new()}
   end
 
-  defp process_message(todo_list, {:add_entry, new_entry}) do
-    Todo.List.add_entry(todo_list, new_entry)
+  @impl true
+  def handle_cast({:add_entry, new_entry}, todo_list) do
+    {:noreply, Todo.List.add_entry(todo_list, new_entry)}
   end
 
-  defp process_message(todo_list, {:update_entry, entry, update_fun}) do
-    Todo.List.update_entry(todo_list, entry, update_fun)
+  @impl true
+  def handle_cast({:update_entry, entry, update_fun}, todo_list) do
+    {:noreply, Todo.List.update_entry(todo_list, entry, update_fun)}
   end
 
-  defp process_message(todo_list, {:delete_entry, entry_id}) do
-    Todo.List.delete_entry(todo_list, entry_id)
+  @impl true
+  def handle_cast({:delete_entry, entry_id}, todo_list) do
+    {:noreply, Todo.List.delete_entry(todo_list, entry_id)}
   end
 
-  defp process_message(todo_list, {:entries, caller, date}) do
-    send(caller, {:todo_entries, Todo.List.entries(todo_list, date)})
-    todo_list
+  @impl true
+  def handle_call({:entries, date},_ , todo_list) do
+    {:reply, Todo.List.entries(todo_list, date), todo_list}
   end
 end
