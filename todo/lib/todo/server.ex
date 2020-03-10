@@ -1,10 +1,9 @@
 defmodule Todo.Server do
   use GenServer
-  
+
   def start do
     GenServer.start(__MODULE__, nil)
   end
-
 
   def add_entry(pid, new_entry) do
     GenServer.cast(pid, {:add_entry, new_entry})
@@ -17,7 +16,7 @@ defmodule Todo.Server do
   def delete_entry(pid, entry_id) do
     GenServer.cast(pid, {:delete_entry, entry_id})
   end
-  
+
   def entries(pid, date) do
     GenServer.call(pid, {:entries, date})
   end
@@ -43,7 +42,7 @@ defmodule Todo.Server do
   end
 
   @impl true
-  def handle_call({:entries, date},_ , todo_list) do
+  def handle_call({:entries, date}, _, todo_list) do
     {:reply, Todo.List.entries(todo_list, date), todo_list}
   end
 end

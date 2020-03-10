@@ -36,7 +36,7 @@ defmodule Todo.List do
   @doc """
   Update an entry based upon an entry id, and a function for updating the entry
   """
-  def update_entry(%Todo.List{}= todo_list, entry_id, updater_fun) do
+  def update_entry(%Todo.List{} = todo_list, entry_id, updater_fun) do
     case Map.fetch(todo_list.entries, entry_id) do
       :error ->
         todo_list
@@ -52,12 +52,16 @@ defmodule Todo.List do
   def update_entry(%Todo.List{} = todo_list, %{} = new_entry) do
     update_entry(todo_list, new_entry.id, fn _ -> new_entry end)
   end
-  
+
   @doc """
   Deletes an entry from the todo list, based on the id given
   """
   def delete_entry(%Todo.List{} = todo_list, entry_id) do
-    %Todo.List{todo_list | entries: Map.delete(todo_list.entries, entry_id), auto_id: todo_list.auto_id - 1}
+    %Todo.List{
+      todo_list
+      | entries: Map.delete(todo_list.entries, entry_id),
+        auto_id: todo_list.auto_id - 1
+    }
   end
 
   defimpl String.Chars, for: Todo.List do
@@ -74,8 +78,8 @@ defmodule Todo.List do
     defp into_callback(todo_list, {:cont, entry}) do
       Todo.List.add_entry(todo_list, entry)
     end
+
     defp into_callback(todo_list, :done), do: todo_list
     defp into_callback(_todo_list, :halt), do: :ok
   end
 end
-

@@ -10,7 +10,10 @@ defmodule Todo.Cache do
   end
 
   @impl true
-  def init(_), do: {:ok, %{}}
+  def init(_) do
+    Todo.Database.start()
+    {:ok, %{}}
+  end
 
   @impl true
   def handle_call({:server_process, todo_list_name}, _, todo_servers) do

@@ -5,7 +5,7 @@ defmodule TodoCacheTest do
   test "server_process" do
     Cache.start()
     bob_pid = Cache.server_process("bob")
-    
+
     assert bob_pid != Cache.server_process("alice")
     assert bob_pid == Cache.server_process("bob")
   end
