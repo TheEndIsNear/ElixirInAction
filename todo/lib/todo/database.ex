@@ -1,24 +1,35 @@
 defmodule Todo.Database do
   use GenServer
 
+  alias Todo.DatabaseWorker
+
+  @app_name __MODULE__
   @db_folder "./persist"
 
   def start do
-    GenServer.start(__MODULE__, nil, name: __MODULE__)
+    GenServer.start(@app_name, %{})
   end
 
   def store(key, data) do
-    GenServer.cast(__MODULE__, {:store, key, data})
+    worker_pid = choose_worker(key)
+    GenServer.cast(worker_pid, {:store, key, data})
   end
 
   def get(key) do
-    GenServer.call(__MODULE__, {:get, key})
+    worker_pid = choose_worker(key)
+    GenServer.call(worker_pid, {:get, key})
+  end
+
+  def choose_worker(key) do
+    id = :erlang.phash2(key, 3)
+    GenServer.call(@app_name, {:get_worker, id})
   end
 
   @impl true
   def init(_) do
-    File.mkdir_p!(@db_folder)
-    {:ok, nil}
+    send(self(), :start_workers)
+    Process.register(self(), @app_name)
+    {:ok, %{}}
   end
 
   @impl true
@@ -39,6 +50,24 @@ defmodule Todo.Database do
       end
 
     {:reply, data, state}
+  end
+
+  @impl true
+  def handle_call({:get_worker, id}, _, state) do
+    worker_pid = Map.get(state, id)
+
+    {:reply, worker_pid, state}
+  end
+
+  @impl true
+  def handle_info(:start_workers, _state) do
+    worker_map =
+      for worker <- 0..2, into: %{} do
+        {:ok, pid} = DatabaseWorker.start(@db_folder)
+        {worker, pid}
+      end
+
+    {:noreply, worker_map}
   end
 
   defp file_name(key) do
