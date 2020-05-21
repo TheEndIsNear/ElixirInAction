@@ -6,8 +6,9 @@ defmodule Todo.Database do
   @app_name __MODULE__
   @db_folder "./persist"
 
-  def start do
-    GenServer.start(@app_name, %{})
+  def start_link do
+    IO.puts("Starting database server.")
+    GenServer.start_link(@app_name, %{})
   end
 
   def store(key, data) do
@@ -45,7 +46,7 @@ defmodule Todo.Database do
   def handle_info(:start_workers, _state) do
     worker_map =
       for worker <- 0..2, into: %{} do
-        {:ok, pid} = DatabaseWorker.start(@db_folder)
+        {:ok, pid} = DatabaseWorker.start_link(@db_folder)
         {worker, pid}
       end
 

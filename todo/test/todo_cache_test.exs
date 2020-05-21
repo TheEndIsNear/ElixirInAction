@@ -3,7 +3,7 @@ defmodule TodoCacheTest do
   alias Todo.Cache
 
   test "server_process" do
-    Cache.start()
+    Cache.start_link(nil)
     bob_pid = Cache.server_process("bob")
 
     assert bob_pid != Cache.server_process("alice")
@@ -11,7 +11,7 @@ defmodule TodoCacheTest do
   end
 
   test "to-do operations" do
-    Todo.Cache.start()
+    Cache.start_link(nil)
     alice = Todo.Cache.server_process("alice")
     Todo.Server.add_entry(alice, %{date: ~D[2018-12-19], title: "Dentist"})
     entries = Todo.Server.entries(alice, ~D[2018-12-19])
