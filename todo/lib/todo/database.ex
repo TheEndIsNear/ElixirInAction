@@ -6,7 +6,7 @@ defmodule Todo.Database do
   @app_name __MODULE__
   @db_folder "./persist"
 
-  def start_link do
+  def start_link(_) do
     IO.puts("Starting database server.")
     GenServer.start_link(@app_name, %{})
   end

@@ -12,7 +12,6 @@ defmodule Todo.Cache do
 
   @impl true
   def init(_) do
-    Todo.Database.start_link()
     {:ok, %{}}
   end
 
