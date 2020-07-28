@@ -11,7 +11,6 @@ defmodule TodoCacheTest do
   end
 
   test "to-do operations" do
-    Cache.start_link()
     alice = Todo.Cache.server_process("alice")
     Todo.Server.add_entry(alice, %{date: ~D[2018-12-19], title: "Dentist"})
     entries = Todo.Server.entries(alice, ~D[2018-12-19])
