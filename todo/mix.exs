@@ -19,6 +19,11 @@ defmodule Todo.MixProject do
   end
 
   defp deps do
-    [{:poolboy, "~> 1.5"}]
+    [
+      {:poolboy, "~> 1.5"},
+      {:cowboy, "~> 2.8"},
+      {:plug, "~> 1.10"},
+      {:plug_cowboy, "~> 2.3"}
+    ]
   end
 end
