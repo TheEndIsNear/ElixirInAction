@@ -18,13 +18,17 @@ defmodule Todo.DatabaseWorker do
 
   @impl true
   def init(folder) do
-    File.mkdir_p!(folder)
+    folder
+    |> folder()
+    |> File.mkdir_p!()
+
     {:ok, %{folder: folder}}
   end
 
   @impl true
   def handle_cast({:store, key, data}, %{folder: folder} = state) do
     folder
+    |> folder()
     |> file_name(key)
     |> File.write!(:erlang.term_to_binary(data))
 
@@ -34,7 +38,11 @@ defmodule Todo.DatabaseWorker do
   @impl true
   def handle_call({:get, key}, _, %{folder: folder} = state) do
     data =
-      case File.read(file_name(folder, key)) do
+      folder
+      |> folder()
+      |> file_name(key)
+      |> File.read()
+      |> case do
         {:ok, contents} -> :erlang.binary_to_term(contents)
         {:error, :enoent} -> nil
       end
@@ -43,6 +51,12 @@ defmodule Todo.DatabaseWorker do
   end
 
   defp file_name(folder, key) do
-    Path.join(folder, to_string(key))
+    Path.join(folder, key)
+  end
+
+  defp folder(folder) do
+    [node_name | _] = Node.self() |> Atom.to_string() |> String.split("@")
+
+    Path.join([folder, "/", node_name])
   end
 end
